@@ -13,7 +13,7 @@ import (
 var db *sql.DB
 
 func InitDB() (err error) {
-	db, err = sql.Open("", "./sqlite.db")
+	db, err = sql.Open("sqlite", "./sqlite.db")
 	if err != nil {
 		log.Fatalf("打开数据库错误: %v", err)
 	}
