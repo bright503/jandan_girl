@@ -25,6 +25,6 @@ go.work.sum
 .env
 
 
-
+/.idea/
 /img/
 sqlite.db

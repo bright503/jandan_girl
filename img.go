@@ -11,38 +11,45 @@ import (
 	"time"
 )
 
-func DownloadPosts(posts []Post) {
+// DownloadPosts 下载多个Post
+// return 是否有图片已经被下载
+func DownloadPosts(posts []Post) bool {
+	result := false
 	for _, post := range posts {
-		DownloadPost(post)
+		result = DownloadPost(post) || result
 	}
+	return result
 }
 
-func DownloadPost(post Post) {
+// DownloadPost 下载单个Post
+// return 是否有图片已经被下载
+func DownloadPost(post Post) bool {
+	result := false
 	for _, img := range post.Images {
 		parsedTime, _ := time.Parse(time.RFC3339, post.Date)
-		downloadImageSetTime(img, parsedTime)
+		result = downloadImageSetTime(img, parsedTime) || result
 	}
+	return result
 }
 
-func DownloadImages(images []Image) {
-	for _, img := range images {
-		downloadImage(img)
-	}
-}
+// JanDanHost jandan图床
+const (
+	JanDanHost = "https://img.toto.im/"
+	RegStr     = `https?://[^/]+/`
+)
 
-func downloadImageSetTime(image Image, time time.Time) {
-
+func downloadImageSetTime(image Image, time time.Time) bool {
 	folderName := filepath.Join("img", image.Path)
 	err := os.MkdirAll(folderName, os.ModePerm)
 	if err != nil {
 		log.Printf("创建文件夹失败: %v", err)
-		return
+		return false
 	}
 	fileName := image.FileName + "." + image.Ext
 	savePath := filepath.Join(folderName, fileName)
 
-	if PathExists(savePath) {
-		return
+	if pathExists(savePath) {
+		return true
 	}
 	log.Printf("下载图片 %s", savePath)
 
@@ -50,21 +57,18 @@ func downloadImageSetTime(image Image, time time.Time) {
 	file, err := os.Create(savePath)
 	if err != nil {
 		log.Println(err)
-		return
+		return false
 	}
 	defer file.Close()
 
-	// jandan图床
-	host := "https://img.toto.im/"
-
-	reg := regexp.MustCompile(`https?://[a-zA-Z0-9._-]+/`)
+	reg := regexp.MustCompile(RegStr)
 
 	// 尺寸优先，新浪图床优先
 	urls := []string{
 		image.FullURL,
-		reg.ReplaceAllString(image.FullURL, host),
+		reg.ReplaceAllString(image.FullURL, JanDanHost),
 		image.URL,
-		reg.ReplaceAllString(image.URL, host),
+		reg.ReplaceAllString(image.URL, JanDanHost),
 	}
 
 	for _, url := range urls {
@@ -79,13 +83,10 @@ func downloadImageSetTime(image Image, time time.Time) {
 	if !time.IsZero() {
 		_ = os.Chtimes(savePath, time, time)
 	}
+	return false
 }
 
-func downloadImage(image Image) {
-	downloadImageSetTime(image, time.Time{})
-}
-
-func PathExists(path string) bool {
+func pathExists(path string) bool {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true

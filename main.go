@@ -1,36 +1,72 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"runtime/debug"
 	"time"
 )
 
-func main() {
-	_ = InitDB()
+const PageSize = 300
 
+func init() {
+	_ = InitDB()
+}
+
+func main() {
 	log.Printf("下载数据库中现有图片...")
-	posts := SelectAllPost()
-	log.Printf("查询到%d条文章", len(posts))
-	DownloadPosts(posts)
-	log.Printf("下载完成")
+	for i := 0; true; i++ {
+		posts := SelectPostByPage(i*PageSize, PageSize)
+		log.Printf("查询到%d条文章", len(posts))
+		DownloadPosts(posts)
+		if len(posts) < PageSize {
+			break
+		}
+	}
+	log.Printf("下载数据库中图片完成！")
+	Refresh(false)
+	// 启动后每天全量刷新 更新XX和OO
+	fullRefreshTicker := time.NewTicker(1 * time.Hour)
+	// 半分钟检查最新的图片
+	checkTicker := time.NewTicker(20 * time.Second)
+	defer fullRefreshTicker.Stop()
+	defer checkTicker.Stop()
 
 	for {
-		refresh()
-		time.Sleep(300 * time.Second)
+		select {
+		case <-fullRefreshTicker.C:
+			Refresh(false)
+		case <-checkTicker.C:
+			Refresh(true)
+		}
 	}
 }
 
-func refresh() {
+// Refresh 更新OO和XX
+// check 检查到已下载的图片时就停止
+func Refresh(check bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Printf("Panic: %v\nStack Trace:\n%s\n", err, debug.Stack())
+		}
+	}()
 	startId := ""
-	for i := 0; i < 10; i++ {
-		log.Printf("查询 start_id: %s", startId)
-		response := getPosts(startId)
-		n := len(response.Data)
-		log.Printf("%d条", n)
-		if n <= 0 {
+	for {
+		log.Printf("start_id: %s", startId)
+		response, err := GetPosts(startId)
+		if err != nil {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		startId = response.PrintLog()
+		if startId == "" {
 			break
 		}
-		startId = replaceInto(response)
+		ReplaceInto(response.Data)
+		if DownloadPosts(response.Data) && check {
+			log.Printf("检查到已下载图片，停止更新")
+			break
+		}
 		time.Sleep(1 * time.Second)
 	}
 	log.Printf("更新成功!")

@@ -13,7 +13,7 @@ import (
 var db *sql.DB
 
 func InitDB() (err error) {
-	db, err = sql.Open("sqlite", "./sqlite.db")
+	db, err = sql.Open("", "./sqlite.db")
 	if err != nil {
 		log.Fatalf("打开数据库错误: %v", err)
 	}
@@ -58,10 +58,11 @@ func InitDB() (err error) {
 	return err
 }
 
-func SelectAllPost() []Post {
+func SelectPostByPage(offset int, limit int) []Post {
 	queryPost := `SELECT id ,post_id, author, author_type, date, content, user_id, vote_positive, vote_negative,
-ip_location FROM posts`
-	rows, _ := db.Query(queryPost)
+ip_location FROM posts order by date desc limit ?,?`
+	stmt, _ := db.Prepare(queryPost)
+	rows, _ := stmt.Query(offset, limit)
 	defer rows.Close()
 
 	var posts []Post
@@ -126,17 +127,11 @@ ip_location, FROM posts WHERE id = ?`
 	return post
 }
 
-func replaceInto(response Response) string {
-	length := len(response.Data)
+func ReplaceInto(posts []Post) {
+	length := len(posts)
 	if length <= 0 {
-		return ""
+		return
 	}
-
-	startTime, _ := time.Parse(time.RFC3339, response.Data[length-1].Date)
-	start := startTime.Format("2006-01-02 15:04:05")
-	endTime, _ := time.Parse(time.RFC3339, response.Data[0].Date)
-	end := endTime.Format("2006-01-02 15:04:05")
-	log.Printf("保存文章 %d 条, %s-%s", length, start, end)
 
 	postInsert, _ := db.Prepare(`REPLACE INTO posts (id, post_id, author, author_type, date, content, user_id, vote_positive, vote_negative, ip_location)
 		              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
@@ -148,7 +143,7 @@ func replaceInto(response Response) string {
 	// Insert data into MySQL
 	//for _, post := range response.Data {
 	for i := length - 1; i >= 0; i-- {
-		post := response.Data[i]
+		post := posts[i]
 
 		// Insert post data
 		_, err := postInsert.Exec(post.ID, post.PostID, post.Author, post.AuthorType, post.Date, post.Content, post.UserID, post.VotePositive, post.VoteNegative, post.IPLocation)
@@ -168,8 +163,5 @@ func replaceInto(response Response) string {
 				log.Printf("插入图片错误 %v", err)
 			}
 		}
-		//DownloadImages(post.Images)
 	}
-	DownloadPosts(response.Data)
-	return strconv.Itoa(response.Data[length-1].ID)
 }
