@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-ENV GO111MODULE=on CGO_ENABLED=1 GOOS=linux
+ENV GO111MODULE=on CGO_ENABLED=0 GOOS=linux
 
 RUN go build -o /app/jandan-girl .
 
