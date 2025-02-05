@@ -50,9 +50,11 @@ func Refresh(check bool) {
 			fmt.Printf("Panic: %v\nStack Trace:\n%s\n", err, debug.Stack())
 		}
 	}()
+	if !check {
+		log.Printf("全量更新煎蛋数据...")
+	}
 	startId := ""
 	for {
-		log.Printf("start_id: %s", startId)
 		response, err := GetPosts(startId)
 		if err != nil {
 			time.Sleep(1 * time.Second)
@@ -64,8 +66,8 @@ func Refresh(check bool) {
 		}
 		ReplaceInto(response.Data)
 		if DownloadPosts(response.Data) && check {
-			log.Printf("检查到已下载图片，停止更新")
-			break
+			log.Printf("检查到已下载图片，更新完成")
+			return
 		}
 		time.Sleep(1 * time.Second)
 	}

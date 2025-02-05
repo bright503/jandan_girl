@@ -14,8 +14,6 @@ type Response struct {
 
 func (res Response) PrintLog() string {
 	n := len(res.Data)
-
-	log.Printf("%d条", n)
 	if n <= 0 {
 		return ""
 	}
@@ -43,6 +41,7 @@ type Post struct {
 	Images       []Image `json:"images"`
 	IPLocation   string  `json:"ip_location"`
 }
+
 type Image struct {
 	URL       string `json:"url"`
 	FullURL   string `json:"full_url"`

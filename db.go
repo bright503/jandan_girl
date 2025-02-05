@@ -139,6 +139,7 @@ func ReplaceInto(posts []Post) {
 
 	imgInsert, _ := db.Prepare(`REPLACE INTO images (id, post_id, url, full_url, host, thumb_size, ext, file_name, path)
 			               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	defer imgInsert.Close()
 
 	// Insert data into MySQL
 	//for _, post := range response.Data {
