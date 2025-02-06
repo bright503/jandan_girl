@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
+	"path"
 	"strconv"
 	"time"
 
@@ -13,7 +15,15 @@ import (
 var db *sql.DB
 
 func InitDB() (err error) {
-	db, err = sql.Open("sqlite", "./sqlite.db")
+	dbFile := "data/db/sqlite.db"
+	if !pathExists(dbFile) {
+		err := os.MkdirAll(path.Dir(dbFile), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
+	db, err = sql.Open("sqlite", dbFile)
 	if err != nil {
 		log.Fatalf("打开数据库错误: %v", err)
 	}

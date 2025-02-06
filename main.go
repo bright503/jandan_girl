@@ -25,8 +25,9 @@ func main() {
 	}
 	log.Printf("下载数据库中图片完成！")
 	Refresh(false)
-	// 启动后每天全量刷新 更新XX和OO
-	fullRefreshTicker := time.NewTicker(1 * time.Hour)
+
+	// 启动后每6小时全量刷新 更新XX和OO
+	fullRefreshTicker := time.NewTicker(6 * time.Hour)
 	// 半分钟检查最新的图片
 	checkTicker := time.NewTicker(20 * time.Second)
 	defer fullRefreshTicker.Stop()

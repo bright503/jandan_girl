@@ -39,7 +39,7 @@ const (
 )
 
 func downloadImageSetTime(image Image, time time.Time) bool {
-	folderName := filepath.Join("img", image.Path)
+	folderName := filepath.Join("data", "img", image.Path)
 	err := os.MkdirAll(folderName, os.ModePerm)
 	if err != nil {
 		log.Printf("创建文件夹失败: %v", err)

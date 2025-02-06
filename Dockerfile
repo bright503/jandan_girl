@@ -17,8 +17,11 @@ RUN apk update \
     && apk upgrade \
     && apk add --no-cache ca-certificates tzdata \
     && update-ca-certificates 2>/dev/null || true
+
 WORKDIR /app
 
 COPY --from=builder /app/jandan-girl .
+
+VOLUME [ "/app/data/db", "/app/data/img" ]
 
 ENTRYPOINT ["./jandan-girl"]

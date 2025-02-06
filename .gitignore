@@ -26,5 +26,4 @@ go.work.sum
 
 
 /.idea/
-/img/
-sqlite.db
+/data/
