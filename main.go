@@ -3,6 +3,7 @@ package main
 import (
 	"jandan_girl/db"
 	"jandan_girl/jandan"
+	"jandan_girl/web"
 )
 
 func init() {
@@ -11,5 +12,5 @@ func init() {
 
 func main() {
 	go jandan.Run()
-	select {}
+	web.StartServer()
 }

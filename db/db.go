@@ -178,3 +178,10 @@ func ReplaceInto(posts []models.Post) {
 		}
 	}
 }
+
+func GetTotalPostsCount() int {
+	row := db.QueryRow("SELECT COUNT(*) as count FROM posts")
+	var count int
+	_ = row.Scan(&count)
+	return count
+}
