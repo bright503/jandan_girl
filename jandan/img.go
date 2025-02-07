@@ -1,8 +1,10 @@
-package main
+package jandan
 
 import (
 	"fmt"
 	"io"
+	"jandan_girl/models"
+	"jandan_girl/util"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +15,7 @@ import (
 
 // DownloadPosts 下载多个Post
 // return 是否有图片已经被下载
-func DownloadPosts(posts []Post) bool {
+func DownloadPosts(posts []models.Post) bool {
 	result := false
 	for _, post := range posts {
 		result = DownloadPost(post) || result
@@ -23,7 +25,7 @@ func DownloadPosts(posts []Post) bool {
 
 // DownloadPost 下载单个Post
 // return 是否有图片已经被下载
-func DownloadPost(post Post) bool {
+func DownloadPost(post models.Post) bool {
 	result := false
 	for _, img := range post.Images {
 		parsedTime, _ := time.Parse(time.RFC3339, post.Date)
@@ -38,7 +40,7 @@ const (
 	RegStr     = `https?://[^/]+/`
 )
 
-func downloadImageSetTime(image Image, time time.Time) bool {
+func downloadImageSetTime(image models.Image, time time.Time) bool {
 	folderName := filepath.Join("data", "img", image.Path)
 	err := os.MkdirAll(folderName, os.ModePerm)
 	if err != nil {
@@ -48,7 +50,7 @@ func downloadImageSetTime(image Image, time time.Time) bool {
 	fileName := image.FileName + "." + image.Ext
 	savePath := filepath.Join(folderName, fileName)
 
-	if pathExists(savePath) {
+	if util.PathExists(savePath) {
 		return true
 	}
 	log.Printf("下载图片 %s", savePath)
@@ -82,17 +84,6 @@ func downloadImageSetTime(image Image, time time.Time) bool {
 	file.Close()
 	if !time.IsZero() {
 		_ = os.Chtimes(savePath, time, time)
-	}
-	return false
-}
-
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if os.IsNotExist(err) {
-		return false
 	}
 	return false
 }

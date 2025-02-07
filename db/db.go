@@ -1,8 +1,10 @@
-package main
+package db
 
 import (
 	"database/sql"
 	"fmt"
+	"jandan_girl/models"
+	"jandan_girl/util"
 	"log"
 	"os"
 	"path"
@@ -16,7 +18,7 @@ var db *sql.DB
 
 func InitDB() (err error) {
 	dbFile := "data/db/sqlite.db"
-	if !pathExists(dbFile) {
+	if !util.PathExists(dbFile) {
 		err := os.MkdirAll(path.Dir(dbFile), os.ModePerm)
 		if err != nil {
 			return err
@@ -68,16 +70,16 @@ func InitDB() (err error) {
 	return err
 }
 
-func SelectPostByPage(offset int, limit int) []Post {
+func SelectPostByPage(offset int, limit int) []models.Post {
 	queryPost := `SELECT id ,post_id, author, author_type, date, content, user_id, vote_positive, vote_negative,
 ip_location FROM posts order by date desc limit ?,?`
 	stmt, _ := db.Prepare(queryPost)
 	rows, _ := stmt.Query(offset, limit)
 	defer rows.Close()
 
-	var posts []Post
+	var posts []models.Post
 	for rows.Next() {
-		post := Post{}
+		post := models.Post{}
 		_ = rows.Scan(&post.ID, &post.PostID, &post.Author, &post.AuthorType, &post.Date, &post.Content, &post.UserID, &post.VotePositive, &post.VoteNegative, &post.IPLocation)
 		post.Images = SelectImageByPostId(strconv.Itoa(post.ID))
 		posts = append(posts, post)
@@ -85,41 +87,41 @@ ip_location FROM posts order by date desc limit ?,?`
 	return posts
 }
 
-func SelectAllImage() []Image {
+func SelectAllImage() []models.Image {
 	queryImg := `SELECT url, full_url, host, thumb_size, ext, file_name, path FROM images `
 	rows, _ := db.Query(queryImg)
 	defer rows.Close()
-	var images []Image
+	var images []models.Image
 	for rows.Next() {
-		var img Image
+		var img models.Image
 		_ = rows.Scan(&img.URL, &img.FullURL, &img.Host, &img.ThumbSize, &img.Ext, &img.FileName, &img.Path)
 		images = append(images, img)
 	}
 	return images
 }
 
-func SelectImageByPostId(postId string) []Image {
+func SelectImageByPostId(postId string) []models.Image {
 	queryImg := `SELECT url, full_url, host, thumb_size, ext, file_name, path FROM images where post_id = ?`
 	stmt, _ := db.Prepare(queryImg)
 	rows, _ := stmt.Query(postId)
 	defer rows.Close()
-	var images []Image
+	var images []models.Image
 	for rows.Next() {
-		var img Image
+		var img models.Image
 		_ = rows.Scan(&img.URL, &img.FullURL, &img.Host, &img.ThumbSize, &img.Ext, &img.FileName, &img.Path)
 		images = append(images, img)
 	}
 	return images
 }
 
-func SelectPostById(postId string) Post {
+func SelectPostById(postId string) models.Post {
 	queryPost := `SELECT id ,post_id, author, author_type, date, content, user_id, vote_positive, vote_negative,
 ip_location, FROM posts WHERE id = ?`
 	stmt, _ := db.Prepare(queryPost)
 	defer stmt.Close()
 	row := stmt.QueryRow(postId)
 
-	post := Post{}
+	post := models.Post{}
 	_ = row.Scan(&post.ID, &post.PostID, &post.Author, &post.AuthorType, &post.Date, &post.Content, &post.UserID, &post.VotePositive, &post.VoteNegative, &post.IPLocation)
 
 	queryImg := `SELECT url, full_url, host, thumb_size, ext, file_name FROM images where post_id=` + postId
@@ -127,9 +129,9 @@ ip_location, FROM posts WHERE id = ?`
 	rows, _ := db.Query(queryImg)
 	defer rows.Close()
 
-	var images []Image
+	var images []models.Image
 	for rows.Next() {
-		var img Image
+		var img models.Image
 		_ = rows.Scan(&img.URL, &img.FullURL, &img.Host, &img.ThumbSize, &img.Ext, &img.FileName)
 		images = append(images, img)
 	}
@@ -137,7 +139,7 @@ ip_location, FROM posts WHERE id = ?`
 	return post
 }
 
-func ReplaceInto(posts []Post) {
+func ReplaceInto(posts []models.Post) {
 	length := len(posts)
 	if length <= 0 {
 		return
