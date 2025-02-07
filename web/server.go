@@ -1,7 +1,9 @@
 package web
 
 import (
+	"embed"
 	"github.com/gin-gonic/gin"
+	"html/template"
 	"jandan_girl/db"
 	"net/http"
 	"strconv"
@@ -9,9 +11,13 @@ import (
 
 const pageSize = 5
 
+//go:embed templates/*
+var templatesFS embed.FS // 用于嵌入 templates 目录下的所有文件
 func StartServer() {
 	r := gin.Default()
-	r.LoadHTMLGlob("web/templates/*")
+
+	r.SetHTMLTemplate(template.Must(template.New("").ParseFS(templatesFS, "templates/*")))
+
 	// 首页路由，渲染页面
 	r.GET("/", func(c *gin.Context) {
 		page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
