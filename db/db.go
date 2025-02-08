@@ -216,7 +216,7 @@ func SelectWeekHotPostByPage(offset int, limit int) []models.Post {
        vote_negative,
        ip_location
 FROM posts
-where date < DATE('now', '-7 days')
+where date >= DATE('now', '-7 days')
 order by vote_positive desc limit ?,?`
 	stmt, _ := db.Prepare(queryPost)
 	rows, _ := stmt.Query(offset, limit)
