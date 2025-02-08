@@ -4,23 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.title}}</title>
+    <style>
+        .post-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .card {
+            margin: auto;
+            width: 90%;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .card img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .card h1 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .card .votes {
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
 
 <a href="/">最新</a>
 <a href="/week">本周</a>
 <a href="/all">总榜</a>
+<a href="/bad">黑榜</a>
 
-<div>
+<div class="post-container">
     {{range .Posts}}
-    <div>
+    <div class="card">
         <h1>{{.ID}}</h1>
-        <p>{{.Content}}</p>
-        <div>
-            {{range .Images}}
-            <img src="/img/{{.Path}}/{{.FileName}}.{{.Ext}}" alt="Image" style="width: 300px; height: auto;"/>
-            {{end}}
-        </div>
+        {{.HtmlContent}}
         <p>
             <span style="color: red;">OO {{.VotePositive}}</span>
             <span style="color: dimgrey;">XX {{.VoteNegative}}</span>

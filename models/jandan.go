@@ -1,6 +1,7 @@
 package models
 
 import (
+	"html/template"
 	"log"
 	"strconv"
 	"time"
@@ -40,6 +41,7 @@ type Post struct {
 	VoteNegative int     `json:"vote_negative"`
 	Images       []Image `json:"images"`
 	IPLocation   string  `json:"ip_location"`
+	HtmlContent  template.HTML
 }
 
 type Image struct {

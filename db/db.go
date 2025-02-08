@@ -114,17 +114,26 @@ ip_location FROM posts order by vote_positive desc limit ?,?`
 	return posts
 }
 
-func SelectAllImage() []models.Image {
-	queryImg := `SELECT url, full_url, host, thumb_size, ext, file_name, path FROM images `
-	rows, _ := db.Query(queryImg)
+func SelectBadPostByPage(offset int, limit int) []models.Post {
+	queryPost := `SELECT id ,post_id, author, author_type, date, content, user_id, vote_positive, vote_negative,
+ip_location FROM posts order by vote_negative desc limit ?,?`
+	stmt, _ := db.Prepare(queryPost)
+	rows, _ := stmt.Query(offset, limit)
 	defer rows.Close()
-	var images []models.Image
+
+	var posts []models.Post
 	for rows.Next() {
-		var img models.Image
-		_ = rows.Scan(&img.URL, &img.FullURL, &img.Host, &img.ThumbSize, &img.Ext, &img.FileName, &img.Path)
-		images = append(images, img)
+		post := models.Post{}
+		var dbTime string
+		_ = rows.Scan(&post.ID, &post.PostID, &post.Author, &post.AuthorType, &dbTime, &post.Content, &post.UserID, &post.VotePositive, &post.VoteNegative, &post.IPLocation)
+		t, err := time.Parse(time.RFC3339, dbTime)
+		if err == nil {
+			post.Date = t.Format("2006-01-02 15:04:05")
+		}
+		post.Images = SelectImageByPostId(strconv.Itoa(post.ID))
+		posts = append(posts, post)
 	}
-	return images
+	return posts
 }
 
 func SelectImageByPostId(postId string) []models.Image {
