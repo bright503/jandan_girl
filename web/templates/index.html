@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图片和文章展示</title>
+    <title>{{.title}}</title>
 </head>
 <body>
 
-<h1>文章列表</h1>
+<a href="/">最新</a>
+<a href="/week">本周</a>
+<a href="/all">总榜</a>
+
 <div>
     {{range .Posts}}
     <div>
@@ -18,19 +21,23 @@
             <img src="/img/{{.Path}}/{{.FileName}}.{{.Ext}}" alt="Image" style="width: 300px; height: auto;"/>
             {{end}}
         </div>
-        <p>OO {{.VotePositive}}   XX {{.VoteNegative}}</p>
+        <p>
+            <span style="color: red;">OO {{.VotePositive}}</span>
+            <span style="color: dimgrey;">XX {{.VoteNegative}}</span>
+        </p>
         <p>{{.Author}} {{.Date}}</p>
     </div>
     {{end}}
 </div>
 <!-- 翻页按钮 -->
 <div>
+    <p>{{.currentPage}}/{{.totalPages}}</p>
     {{if .PrevPage}}
-    <a href="/?page={{.PrevPage}}">上一页</a>
+    <a href="{{.PrevPage}}">上一页</a>
     {{end}}
 
     {{if .NextPage}}
-    <a href="/?page={{.NextPage}}">下一页</a>
+    <a href="{{.NextPage}}">下一页</a>
     {{end}}
 </div>
 </body>

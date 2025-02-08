@@ -80,7 +80,34 @@ ip_location FROM posts order by date desc limit ?,?`
 	var posts []models.Post
 	for rows.Next() {
 		post := models.Post{}
-		_ = rows.Scan(&post.ID, &post.PostID, &post.Author, &post.AuthorType, &post.Date, &post.Content, &post.UserID, &post.VotePositive, &post.VoteNegative, &post.IPLocation)
+		var dbTime string
+		_ = rows.Scan(&post.ID, &post.PostID, &post.Author, &post.AuthorType, &dbTime, &post.Content, &post.UserID, &post.VotePositive, &post.VoteNegative, &post.IPLocation)
+		t, err := time.Parse(time.RFC3339, dbTime)
+		if err == nil {
+			post.Date = t.Format("2006-01-02 15:04:05")
+		}
+		post.Images = SelectImageByPostId(strconv.Itoa(post.ID))
+		posts = append(posts, post)
+	}
+	return posts
+}
+
+func SelectHotPostByPage(offset int, limit int) []models.Post {
+	queryPost := `SELECT id ,post_id, author, author_type, date, content, user_id, vote_positive, vote_negative,
+ip_location FROM posts order by vote_positive desc limit ?,?`
+	stmt, _ := db.Prepare(queryPost)
+	rows, _ := stmt.Query(offset, limit)
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		post := models.Post{}
+		var dbTime string
+		_ = rows.Scan(&post.ID, &post.PostID, &post.Author, &post.AuthorType, &dbTime, &post.Content, &post.UserID, &post.VotePositive, &post.VoteNegative, &post.IPLocation)
+		t, err := time.Parse(time.RFC3339, dbTime)
+		if err == nil {
+			post.Date = t.Format("2006-01-02 15:04:05")
+		}
 		post.Images = SelectImageByPostId(strconv.Itoa(post.ID))
 		posts = append(posts, post)
 	}
@@ -112,31 +139,6 @@ func SelectImageByPostId(postId string) []models.Image {
 		images = append(images, img)
 	}
 	return images
-}
-
-func SelectPostById(postId string) models.Post {
-	queryPost := `SELECT id ,post_id, author, author_type, date, content, user_id, vote_positive, vote_negative,
-ip_location, FROM posts WHERE id = ?`
-	stmt, _ := db.Prepare(queryPost)
-	defer stmt.Close()
-	row := stmt.QueryRow(postId)
-
-	post := models.Post{}
-	_ = row.Scan(&post.ID, &post.PostID, &post.Author, &post.AuthorType, &post.Date, &post.Content, &post.UserID, &post.VotePositive, &post.VoteNegative, &post.IPLocation)
-
-	queryImg := `SELECT url, full_url, host, thumb_size, ext, file_name FROM images where post_id=` + postId
-
-	rows, _ := db.Query(queryImg)
-	defer rows.Close()
-
-	var images []models.Image
-	for rows.Next() {
-		var img models.Image
-		_ = rows.Scan(&img.URL, &img.FullURL, &img.Host, &img.ThumbSize, &img.Ext, &img.FileName)
-		images = append(images, img)
-	}
-	post.Images = images
-	return post
 }
 
 func ReplaceInto(posts []models.Post) {
@@ -184,4 +186,44 @@ func GetTotalPostsCount() int {
 	var count int
 	_ = row.Scan(&count)
 	return count
+}
+func GetWeekPostsCount() int {
+	row := db.QueryRow("SELECT COUNT(*) as count FROM posts where date >= DATE('now', '-7 days')")
+	var count int
+	_ = row.Scan(&count)
+	return count
+}
+
+func SelectWeekHotPostByPage(offset int, limit int) []models.Post {
+	queryPost :=
+		`SELECT id,
+       post_id,
+       author,
+       author_type,
+       date,
+       content,
+       user_id,
+       vote_positive,
+       vote_negative,
+       ip_location
+FROM posts
+where date < DATE('now', '-7 days')
+order by vote_positive desc limit ?,?`
+	stmt, _ := db.Prepare(queryPost)
+	rows, _ := stmt.Query(offset, limit)
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		post := models.Post{}
+		var dbTime string
+		_ = rows.Scan(&post.ID, &post.PostID, &post.Author, &post.AuthorType, &dbTime, &post.Content, &post.UserID, &post.VotePositive, &post.VoteNegative, &post.IPLocation)
+		t, err := time.Parse(time.RFC3339, dbTime)
+		if err == nil {
+			post.Date = t.Format("2006-01-02 15:04:05")
+		}
+		post.Images = SelectImageByPostId(strconv.Itoa(post.ID))
+		posts = append(posts, post)
+	}
+	return posts
 }
