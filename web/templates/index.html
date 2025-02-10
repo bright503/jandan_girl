@@ -49,14 +49,14 @@
 <body>
 
 <a href="/">最新</a>
-<a href="/week">本周</a>
+<a href="/week">周榜</a>
 <a href="/all">总榜</a>
 <a href="/bad">黑榜</a>
 
 <div class="post-container">
     {{range .Posts}}
     <div class="card">
-        <h1>{{.ID}}</h1>
+<!--        <h1>{{.ID}}</h1>-->
         {{.HtmlContent}}
         <p>
             <span style="color: red;">OO {{.VotePositive}}</span>

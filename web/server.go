@@ -59,10 +59,9 @@ func showPosts(c *gin.Context) {
 		nextPage = page + 1
 	}
 
-	handelPosts(posts)
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"title":       "最新",
-		"Posts":       posts,
+		"Posts":       handelPosts(posts),
 		"totalPages":  totalPages,
 		"currentPage": page,
 		"PrevPage":    fmt.Sprintf("/?page=%d", prevPage),
@@ -87,10 +86,9 @@ func showBadPosts(c *gin.Context) {
 		nextPage = page + 1
 	}
 
-	handelPosts(posts)
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"title":       "黑榜",
-		"Posts":       posts,
+		"Posts":       handelPosts(posts),
 		"totalPages":  totalPages,
 		"currentPage": page,
 		"PrevPage":    fmt.Sprintf("/bad/?page=%d", prevPage),
@@ -115,10 +113,9 @@ func showAllHotPosts(c *gin.Context) {
 		nextPage = page + 1
 	}
 
-	handelPosts(posts)
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"title":       "总榜",
-		"Posts":       posts,
+		"Posts":       handelPosts(posts),
 		"totalPages":  totalPages,
 		"currentPage": page,
 		"PrevPage":    fmt.Sprintf("/all/?page=%d", prevPage),
@@ -142,10 +139,10 @@ func showWeekHotPosts(c *gin.Context) {
 	if page < totalPages {
 		nextPage = page + 1
 	}
-	handelPosts(posts)
+
 	c.HTML(http.StatusOK, "index.html", gin.H{
-		"title":       "本周",
-		"Posts":       posts,
+		"title":       "周榜",
+		"Posts":       handelPosts(posts),
 		"totalPages":  totalPages,
 		"currentPage": page,
 		"PrevPage":    fmt.Sprintf("/week/?page=%d", prevPage),
@@ -153,19 +150,25 @@ func showWeekHotPosts(c *gin.Context) {
 	})
 }
 
-func handelPosts(posts []models.Post) {
+func handelPosts(posts []models.Post) []PostWarp {
+	var postWarps []PostWarp
 	for i, post := range posts {
 		post.Content = strings.ReplaceAll(post.Content, "\n", "")
 		for _, img := range post.Images {
 			imgTag := `</p>
-<img src="/img/` + img.Path + "/" + img.FileName + "." + img.Ext + `" alt="Image"/>
-<p>`
+        <img src="/img/` + img.Path + "/" + img.FileName + "." + img.Ext + `" alt="Image"/>
+        <p>`
 			post.Content = strings.Replace(post.Content, "#img#", imgTag, 1) // 替换一次
 		}
 		post.Content = "<p>" + post.Content + "</p>"
 
 		post.Content = strings.ReplaceAll(post.Content, "<p></p>", "")
 
-		posts[i].HtmlContent = template.HTML(post.Content)
+		warp := &PostWarp{
+			Post:        &posts[i],
+			HtmlContent: template.HTML(post.Content),
+		}
+		postWarps = append(postWarps, *warp)
 	}
+	return postWarps
 }
